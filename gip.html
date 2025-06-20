@@ -1,0 +1,774 @@
+<!DOCTYPE html>
+<html lang="nl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>GIP Presentatie - Kringwinkel</title>
+    
+    <!-- Tailwind CSS for rapid UI development -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    
+    <!-- Google Fonts for typography -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;900&display=swap" rel="stylesheet">
+    
+    <style>
+        /*
+         * ==========================================
+         * Base & Typography Styles
+         * ==========================================
+        */
+        body {
+            font-family: 'Inter', sans-serif;
+            background-color: #FF6600;
+            color: white;
+            height: auto;
+            min-height: 100vh;
+        }
+
+
+        /*
+         * ==========================================
+         * Page & Navigation Styles
+         * ==========================================
+        */
+        .page {
+            min-height: 100vh;
+            width: 100%;
+            position: fixed;
+            top: 0;
+            left: 0;
+            display: flex;
+            align-items: center;
+            justify-content: flex-start;
+            flex-direction: column;
+            transition: opacity 0.5s ease-in-out, visibility 0.5s;
+            z-index: 1;
+            padding: 3rem 1.5rem;
+            overflow-y: auto;
+            opacity: 0;
+            visibility: hidden;
+            scrollbar-width: auto !important; /* Ensure scrollbar is visible for Firefox */
+            -ms-overflow-style: scrollbar !important; /* Ensure scrollbar is visible for IE/Edge */
+        }
+        .page::-webkit-scrollbar {
+            display: block !important; /* Ensure scrollbar is visible for WebKit browsers */
+        }
+        
+        #page-menu {
+            justify-content: center; /* Re-center menu page only */
+        }
+
+        /* General styling for content wrappers within pages to be scrollable */
+        .page > .content-wrapper {
+            max-height: 85vh; /* Adjust as needed, leaves space for page padding */
+            overflow-y: auto;
+            width: 100%; /* Ensure it takes available width */
+            scrollbar-width: auto !important; 
+            -ms-overflow-style: scrollbar !important;
+        }
+        .page > .content-wrapper::-webkit-scrollbar {
+            display: block !important;
+            width: 8px;
+        }
+        .page > .content-wrapper::-webkit-scrollbar-thumb {
+            background-color: rgba(255,255,255,0.3);
+            border-radius: 4px;
+        }
+        .page > .content-wrapper::-webkit-scrollbar-track {
+            background-color: rgba(0,0,0,0.05);
+        }
+
+        /* Specific overrides or additions for page-menu's content wrapper if needed */
+        /* For example, if it needs different scrollbar colors or behavior */
+        #page-menu > .content-wrapper {
+            max-height: 85vh; /* Adjust as needed, leaves space for page padding */
+            overflow-y: auto;
+            width: 100%; /* Ensure it takes available width */
+            scrollbar-width: auto !important; 
+            -ms-overflow-style: scrollbar !important;
+        }
+        #page-menu > .content-wrapper::-webkit-scrollbar {
+            display: block !important;
+            width: 8px; /* Example width */
+        }
+        #page-menu > .content-wrapper::-webkit-scrollbar-thumb {
+            background-color: rgba(255,255,255,0.5); /* Example color */
+            border-radius: 4px;
+        }
+        #page-menu > .content-wrapper::-webkit-scrollbar-track {
+            background-color: rgba(0,0,0,0.1); /* Example track color */
+        }
+
+        @media (min-width: 768px) {
+            .page {
+                padding: 2rem;
+            }
+        }
+
+        .page.active {
+            opacity: 1;
+            visibility: visible;
+            z-index: 10;
+        }
+
+        /* Apply fade-in to content wrappers, but exclude those that are now handling their own scrolling, like #page-menu's */
+        /* Or, more generally, if all .content-wrapper are scrollable, we might not want this animation on them */
+        /* For now, let's assume the animation is still desired for non-menu pages' content wrappers */
+        .page.active > .content-wrapper:not(#page-menu > .content-wrapper) {
+          /* If the general .page > .content-wrapper handles scrolling, this animation might need adjustment */
+          /* If content within .content-wrapper is expected to fade in, this is fine */
+            animation: contentFadeIn 0.6s ease-out 0.3s forwards;
+            opacity: 0;
+            width: 100%;
+        }
+        /* For page-menu, we don't want the fade-in on the wrapper if it's scrolling internally */
+        #page-menu.active > .content-wrapper {
+            opacity: 1; /* Ensure it's visible immediately */
+            width: 100%;
+        }
+        
+        @keyframes contentFadeIn {
+            from { opacity: 0; transform: translateY(20px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        /*
+         * ==========================================
+         * Intro Animation Styles
+         * ==========================================
+        */
+        #page-intro { z-index: 100; background-color: #FF6600; transition: opacity 0.8s ease-in-out; justify-content:center; }
+        .intro-container { text-align: center; }
+        .intro-text {
+            font-size: 2.5rem;
+            font-weight: 900;
+            letter-spacing: -0.025em;
+            color: white;
+            opacity: 0;
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            white-space: nowrap;
+        }
+        @media (min-width: 768px) { .intro-text { font-size: 4.5rem; } }
+
+        /* Animation classes */
+        .animate-fade-in-up { animation: fadeInUp 1s ease-out forwards; }
+        .animate-fade-out-up { animation: fadeOutUp 1s ease-in forwards; }
+        .hidden-visually { opacity: 0 !important; visibility: hidden !important; }
+
+        @keyframes fadeInUp {
+            from { opacity: 0; transform: translate(-50%, -30%); }
+            to { opacity: 1; transform: translate(-50%, -50%); }
+        }
+        @keyframes fadeOutUp {
+            from { opacity: 1; transform: translate(-50%, -50%); }
+            to { opacity: 0; transform: translate(-50%, -70%); }
+        }
+
+        /* Home button styling */
+        .home-button {
+            position: fixed;
+            z-index: 50;
+            background-color: rgba(0, 0, 0, 0.25);
+            color: white;
+            border-radius: 9999px;
+            cursor: pointer;
+            transition: all 0.3s cubic-bezier(0.25, 0.8, 0.25, 1);
+            backdrop-filter: blur(8px);
+            border: 1px solid rgba(255,255,255,0.15);
+            display: none; /* Hidden by default */
+            top: 1rem;
+            right: 1rem;
+            padding: 0.5rem;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.2);
+        }
+         @media (min-width: 768px) {
+            .home-button {
+                top: 2rem;
+                right: 2rem;
+                padding: 0.75rem;
+            }
+        }
+
+        .home-button:hover {
+             background-color: rgba(0, 0, 0, 0.4);
+             transform: scale(1.1) rotate(5deg);
+        }
+
+        /* Slide navigation buttons styling */
+        .slide-nav {
+            position: fixed;
+            bottom: 1.5rem;
+            left: 50%;
+            transform: translateX(-50%);
+            z-index: 100;
+            display: none; /* Hidden by default */
+            gap: 1rem;
+        }
+
+        .nav-btn {
+            background-color: rgba(255, 255, 255, 0.1);
+            border: 1px solid rgba(255,255,255,0.2);
+            backdrop-filter: blur(8px);
+            padding: 0.75rem 1.5rem;
+            border-radius: 9999px;
+            font-weight: 600;
+            transition: all 0.3s cubic-bezier(0.25, 0.8, 0.25, 1);
+            cursor: pointer;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.2);
+        }
+        .nav-btn:hover {
+            background-color: rgba(255, 255, 255, 0.2);
+            transform: translateY(-4px);
+            box-shadow: 0 8px 25px rgba(0,0,0,0.3);
+        }
+        .nav-btn:disabled {
+            opacity: 0.4;
+            cursor: not-allowed;
+            transform: translateY(0);
+            box-shadow: 0 4px 15px rgba(0,0,0,0.2);
+        }
+
+        /*
+         * ==========================================
+         * Component Styles - Visual Overhaul
+         * ==========================================
+        */
+        
+        /* Main Menu Screen */
+        #page-menu {
+            justify-content: center; /* Re-center menu page only */
+        }
+
+        /* General styling for content wrappers within pages to be scrollable */
+        .page > .content-wrapper {
+            max-height: 85vh; /* Adjust as needed, leaves space for page padding */
+            overflow-y: auto;
+            width: 100%; /* Ensure it takes available width */
+            scrollbar-width: auto !important; 
+            -ms-overflow-style: scrollbar !important;
+        }
+        .page > .content-wrapper::-webkit-scrollbar {
+            display: block !important;
+            width: 8px;
+        }
+        .page > .content-wrapper::-webkit-scrollbar-thumb {
+            background-color: rgba(255,255,255,0.3);
+            border-radius: 4px;
+        }
+        .page > .content-wrapper::-webkit-scrollbar-track {
+            background-color: rgba(0,0,0,0.05);
+        }
+
+        /* Specific overrides or additions for page-menu's content wrapper if needed */
+        /* For example, if it needs different scrollbar colors or behavior */
+        #page-menu > .content-wrapper {
+            max-height: 85vh; /* Adjust as needed, leaves space for page padding */
+            overflow-y: auto;
+            width: 100%; /* Ensure it takes available width */
+            scrollbar-width: auto !important; 
+            -ms-overflow-style: scrollbar !important;
+        }
+        #page-menu > .content-wrapper::-webkit-scrollbar {
+            display: block !important;
+            width: 8px; /* Example width */
+        }
+        #page-menu > .content-wrapper::-webkit-scrollbar-thumb {
+            background-color: rgba(255,255,255,0.5); /* Example color */
+            border-radius: 4px;
+        }
+        #page-menu > .content-wrapper::-webkit-scrollbar-track {
+            background-color: rgba(0,0,0,0.1); /* Example track color */
+        }
+        .subject-grid { 
+            display: grid; 
+            grid-template-columns: 1fr; 
+            gap: 1rem; 
+            width: 100%;
+            max-width: 1200px;
+        }
+        @media (min-width: 640px) {
+             .subject-grid { grid-template-columns: repeat(2, 1fr); }
+        }
+         @media (min-width: 1024px) {
+             .subject-grid { grid-template-columns: repeat(3, 1fr); }
+        }
+
+        .subject-card { 
+            background: rgba(255, 255, 255, 0.08);
+            border-radius: 1rem; 
+            padding: 1.5rem; 
+            border: 1px solid rgba(255,255,255,0.1);
+            display: flex;
+            flex-direction: column;
+            text-align: center;
+            transition: all 0.4s cubic-bezier(0.25, 0.8, 0.25, 1);
+            box-shadow: 0 4px 30px rgba(0,0,0,0.2);
+            backdrop-filter: blur(10px);
+            position: relative;
+        }
+
+        .subject-card:hover {
+            transform: translateY(-10px);
+            box-shadow: 0 15px 35px rgba(0,0,0,0.3);
+            border-color: rgba(255, 255, 255, 0.2);
+        }
+        
+        .subject-icon {
+            color: white;
+            margin-bottom: 1rem;
+        }
+        
+        .start-button {
+            background-color: white;
+            color: #FF6600;
+            padding: 0.75rem 1.5rem;
+            font-weight: 700;
+            border-radius: 9999px;
+            transition: all 0.3s cubic-bezier(0.25, 0.8, 0.25, 1);
+            cursor: pointer;
+            margin-top: 1.5rem; /* Pushes button to the bottom */
+            display: block;
+            width: 100%;
+            border: 2px solid transparent;
+        }
+        .start-button:hover {
+            background-color: transparent;
+            color: white;
+            border-color: white;
+            transform: scale(1.03);
+        }
+
+        .slide-title { 
+            font-size: 2.25rem; 
+            line-height: 1.1; 
+            font-weight: 900; 
+            margin-bottom: 1.5rem; 
+            text-align: center;
+            letter-spacing: -0.025em; 
+            color: white;
+        }
+        
+        @media (min-width: 768px) { .slide-title { font-size: 4.5rem; margin-bottom: 2.5rem; } }
+        
+        .glass-card { 
+            background: rgba(255, 255, 255, 0.1); 
+            backdrop-filter: blur(16px); 
+            border-radius: 1.5rem; 
+            padding: 1.5rem; 
+            border: 1px solid rgba(255, 255, 255, 0.15);
+            box-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.3);
+        }
+         @media (min-width: 768px) { .glass-card { padding: 2rem 3rem; } }
+
+        .glass-card ul {
+            list-style: none;
+            padding-left: 0;
+        }
+        .glass-card li {
+            position: relative;
+            padding-left: 2rem;
+            margin-bottom: 0.75rem;
+        }
+        .glass-card li::before {
+            content: '→';
+            position: absolute;
+            left: 0;
+            top: 0;
+            color: white; 
+            font-weight: 700;
+        }
+        
+        /*
+         * ==========================================
+         * Organogram Responsive Styles
+         * ==========================================
+        */
+        .org-container {
+            width: 100%;
+        }
+        .org-chart .tree-node {
+            padding: 0.5em 1em;
+            border-radius: 0.5em;
+            display: inline-block;
+            min-width: 120px;
+            font-weight: 600;
+        }
+        .org-chart .tree-node .name { font-weight: bold; }
+        .org-chart .tree-node .title { font-size: 0.8em; opacity: 0.9; }
+        
+        .bg-ceo { background-color: #2dd4bf; color: #115e59; }
+        .bg-manager { background-color: #facc15; color: #78350f; }
+        .bg-adjunct { background-color: #44403c; color: white; }
+        .bg-medewerker { background-color: #d9f99d; color: #3f6212; }
+
+        /* Stacked list for mobile */
+        .org-chart-mobile {
+            display: none;
+            width: 100%;
+        }
+        .org-chart-mobile ul {
+            padding-left: 0;
+            list-style: none;
+        }
+        .org-chart-mobile li {
+            margin-bottom: 0.5rem;
+        }
+        .org-chart-mobile .l2 { padding-left: 1.5rem; }
+        .org-chart-mobile .l3 { padding-left: 3rem; }
+        .org-chart-mobile .l4 { padding-left: 4.5rem; }
+
+
+        /* Tree view for desktop */
+        .org-chart-desktop {
+            display: none;
+            justify-content: center;
+            text-align: center;
+            color: black;
+            overflow-x: auto;
+            padding-bottom: 1rem;
+        }
+        .org-chart-desktop ul {
+            position: relative;
+            padding: 1em 0;
+            white-space: nowrap;
+            margin: 0 auto;
+            transition: all 0.5s;
+        }
+        .org-chart-desktop ul ul::before {
+            content: '';
+            position: absolute; top: 0; left: 50%;
+            border-left: 2px dashed #a3e635; width: 0; height: 1em;
+        }
+        .org-chart-desktop li {
+            display: inline-block; vertical-align: top; text-align: center;
+            list-style-type: none; position: relative; padding: 1em 0.5em 0 0.5em;
+        }
+        .org-chart-desktop li::before, .org-chart-desktop li::after {
+            content: ''; position: absolute; top: 0; right: 50%;
+            border-top: 2px dashed #a3e635; width: 50%; height: 1em;
+        }
+        .org-chart-desktop li::after {
+            right: auto; left: 50%; border-left: 2px dashed #a3e635;
+        }
+        .org-chart-desktop li:only-child::after, .org-chart-desktop li:only-child::before { display: none; }
+        .org-chart-desktop li:only-child { padding-top: 0; }
+        .org-chart-desktop li:first-child::before, .org-chart-desktop li:last-child::after { border: 0 none; }
+        .org-chart-desktop li:last-child::before { border-right: 2px dashed #a3e635; border-radius: 0 5px 0 0; }
+        .org-chart-desktop li:first-child::after { border-radius: 5px 0 0 0; }
+        
+        .org-chart-desktop .tree-group > li { padding: 1em 0.2em 0 0.2em; }
+
+
+        @media (min-width: 1024px) {
+            .org-chart-mobile { display: none; }
+            .org-chart-desktop { display: flex; }
+        }
+         @media (max-width: 1023px) {
+            .org-chart-mobile { display: block; }
+            .org-chart-desktop { display: none; }
+        }
+
+    </style>
+</head>
+<body>
+    
+    <button id="homeBtn" class="home-button" aria-label="Terug naar menu">
+        <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" viewBox="0 0 20 20" fill="currentColor"><path fill-rule="evenodd" d="M9.293 2.293a1 1 0 011.414 0l7 7A1 1 0 0117 10.707V17.5a1.5 1.5 0 01-1.5 1.5h-2.5a1.5 1.5 0 01-1.5-1.5v-2.164A3.5 3.5 0 009 12.5H7a3.5 3.5 0 00-2.5 2.336V17.5A1.5 1.5 0 013 19H.5a.5.5 0 01-.5-.5V10.707a1 1 0 01.293-.707l7-7z" clip-rule="evenodd" /></svg>
+    </button>
+    
+    <div id="slideNav" class="slide-nav">
+        <button id="prevBtn" class="nav-btn">Vorige</button>
+        <button id="nextBtn" class="nav-btn">Volgende</button>
+    </div>
+
+    <main>
+        <!-- ================================================================= -->
+        <!-- New Intro Screen                                                  -->
+        <!-- ================================================================= -->
+        <div id="page-intro" class="page active">
+             <div class="intro-container">
+                <h1 id="intro-name" class="intro-text">Zakaria Akanni</h1>
+                <h2 id="intro-welcome" class="intro-text">Welkom, dit is mijn GIP</h2>
+            </div>
+        </div>
+        
+        <!-- ================================================================= -->
+        <!-- Main Menu Screen                                                  -->
+        <!-- ================================================================= -->
+        <div id="page-menu" class="page">
+            <div class="content-wrapper text-center w-full max-w-6xl">
+                <h1 class="text-4xl md:text-6xl font-black mb-4 text-white">GIP Presentatie</h1>
+                <p class="text-xl text-white/80 mb-10">Kies een vak om de opdrachten te bekijken.</p>
+                <div class="subject-grid">
+                    <!-- Cards will be populated by JS -->
+                </div>
+            </div>
+        </div>
+        
+        <!-- ================================================================= -->
+        <!-- Greeting Page                                                     -->
+        <!-- ================================================================= -->
+        <div id="page-greeting" class="page">
+            <div class="content-wrapper text-center">
+                <h2 id="greeting-text" class="text-4xl md:text-6xl font-black mb-10 text-white"></h2>
+                <button id="start-subject-btn" class="nav-btn text-xl px-10 py-3">Start Opdrachten</button>
+            </div>
+        </div>
+
+        <!-- ================================================================= -->
+        <!-- GIP Content Pages (Task Slides)                                   -->
+        <!-- ================================================================= -->
+        <section id="page-history" class="page"><div class="content-wrapper w-full max-w-4xl glass-card"><h2 class="slide-title">Geschiedenis (KVDW)</h2><div class="relative mt-8"><div class="border-r-2 border-white/20 absolute h-full top-0" style="left: 15px"></div><ul class="space-y-8"><li><div class="flex items-center"><div class="bg-orange-500 rounded-full h-8 w-8 z-10 flex items-center justify-center text-white font-bold">'90</div><div class="ml-6"><h3 class="font-bold text-xl">Start</h3><p class="text-white/80">Focus op milieu en sociale tewerkstelling.</p></div></div></li><li><div class="flex items-center"><div class="bg-orange-500 rounded-full h-8 w-8 z-10 flex items-center justify-center text-white font-bold">'95</div><div class="ml-6"><h3 class="font-bold text-xl">Groei</h3><p class="text-white/80">Officiële steun en 18 centra.</p></div></div></li><li><div class="flex items-center"><div class="bg-orange-500 rounded-full h-8 w-8 z-10 flex items-center justify-center text-white font-bold">'02</div><div class="ml-6"><h3 class="font-bold text-xl">Naam</h3><p class="text-white/80">66 winkels worden "De Kringwinkel".</p></div></div></li><li><div class="flex items-center"><div class="bg-orange-500 rounded-full h-8 w-8 z-10 flex items-center justify-center text-white font-bold">Nu</div><div class="ml-6"><h3 class="font-bold text-xl">Netwerk</h3><p class="text-white/80">Meer dan 130 winkels in Vlaanderen.</p></div></div></li><li><div class="flex items-center"><div class="bg-orange-500 rounded-full h-8 w-8 z-10 flex items-center justify-center text-white font-bold">'22</div><div class="ml-6"><h3 class="font-bold text-xl">Modern</h3><p class="text-white/80">Nieuw logo en slogan: "Opnieuw geluk".</p></div></div></li></ul></div></div></section>
+        <section id="page-org" class="page">
+            <div class="content-wrapper w-full h-full flex flex-col items-center justify-center">
+                <h2 class="slide-title">Organogram</h2>
+                <div class="org-container org-chart">
+                    <!-- Desktop organogram -->
+                    <div class="org-chart-desktop">
+                        <ul>
+                            <li>
+                                <div class="tree-node bg-ceo"><div class="name">Martine Van Goethem</div><div class="title">ceo</div></div>
+                                <ul>
+                                    <li><div class="tree-node bg-manager"><div class="name">Annemie Souverijns</div><div class="title">financial manager</div></div></li>
+                                    <li><div class="tree-node bg-manager"><div class="name">Robby Embrechts</div><div class="title">financial manager</div></div></li>
+                                </ul>
+                                <ul>
+                                    <li><div class="tree-node bg-adjunct"><div class="name">Freddie</div><div class="title">adjunct</div></div></li>
+                                    <li><div class="tree-node bg-adjunct"><div class="name">Mohamed</div><div class="title">adjunct</div></div></li>
+                                </ul>
+                                <ul class="tree-group">
+                                    <li><div class="tree-node bg-medewerker"><div class="name">Rieta</div><div class="title">medewerker</div></div></li>
+                                    <li><div class="tree-node bg-medewerker"><div class="name">Olena</div><div class="title">medewerker</div></div></li>
+                                    <li><div class="tree-node bg-medewerker"><div class="name">Kristof</div><div class="title">medewerker</div></div></li>
+                                    <li><div class="tree-node bg-medewerker"><div class="name">Ali</div><div class="title">medewerker</div></div></li>
+                                    <li><div class="tree-node bg-medewerker"><div class="name">Nazria</div><div class="title">medewerker</div></div></li>
+                                    <li><div class="tree-node bg-medewerker"><div class="name">Endry</div><div class="title">medewerker</div></div></li>
+                                    <li><div class="tree-node bg-medewerker"><div class="name">Ghita</div><div class="title">medewerker</div></div></li>
+                                    <li><div class="tree-node bg-medewerker"><div class="name">Sinngh</div><div class="title">medewerker</div></div></li>
+                                    <li><div class="tree-node bg-medewerker"><div class="name">Zakaria Akanni</div><div class="title">medewerker</div></div></li>
+                                </ul>
+                            </li>
+                        </ul>
+                    </div>
+                     <!-- Mobile organogram -->
+                    <div class="org-chart-mobile glass-card">
+                         <ul>
+                            <li class="l1"><div class="tree-node bg-ceo"><div class="name">Martine Van Goethem</div><div class="title">ceo</div></div></li>
+                            <li class="l2"><div class="tree-node bg-manager"><div class="name">Annemie Souverijns</div><div class="title">financial manager</div></div></li>
+                            <li class="l2"><div class="tree-node bg-manager"><div class="name">Robby Embrechts</div><div class="title">financial manager</div></div></li>
+                            <li class="l3"><div class="tree-node bg-adjunct"><div class="name">Freddie</div><div class="title">adjunct</div></div></li>
+                            <li class="l3"><div class="tree-node bg-adjunct"><div class="name">Mohamed</div><div class="title">adjunct</div></div></li>
+                            <li class="l4"><div class="tree-node bg-medewerker"><div class="name">Rieta</div><div class="title">medewerker</div></div></li>
+                            <li class="l4"><div class="tree-node bg-medewerker"><div class="name">Olena</div><div class="title">medewerker</div></div></li>
+                            <li class="l4"><div class="tree-node bg-medewerker"><div class="name">Kristof</div><div class="title">medewerker</div></div></li>
+                            <li class="l4"><div class="tree-node bg-medewerker"><div class="name">Ali</div><div class="title">medewerker</div></div></li>
+                            <li class="l4"><div class="tree-node bg-medewerker"><div class="name">Nazria</div><div class="title">medewerker</div></div></li>
+                            <li class="l4"><div class="tree-node bg-medewerker"><div class="name">Endry</div><div class="title">medewerker</div></div></li>
+                            <li class="l4"><div class="tree-node bg-medewerker"><div class="name">Ghita</div><div class="title">medewerker</div></div></li>
+                            <li class="l4"><div class="tree-node bg-medewerker"><div class="name">Sinngh</div><div class="title">medewerker</div></div></li>
+                            <li class="l4"><div class="tree-node bg-medewerker"><div class="name">Zakaria Akanni</div><div class="title">medewerker</div></div></li>
+                        </ul>
+                    </div>
+                </div>
+            </div>
+        </section>
+        <section id="page-style" class="page"><div class="content-wrapper w-full max-w-6xl glass-card"><h2 class="slide-title">Huisstijl <svg xmlns="http://www.w3.org/2000/svg" class="h-8 w-8 inline-block" viewBox="0 0 20 20" fill="currentColor"><path fill-rule="evenodd" d="M10 2a8 8 0 100 16 8 8 0 000-16zM5.5 4.5a.5.5 0 01.5.5v2a.5.5 0 01-1 0v-2a.5.5 0 01.5-.5zM6 10a.5.5 0 01.5-.5h1a.5.5 0 010 1h-1a.5.5 0 01-.5-.5zm3 .5a.5.5 0 000-1h-1a.5.5 0 000 1h1zm2 0a.5.5 0 000-1h-1a.5.5 0 000 1h1zm-2-3a.5.5 0 01.5-.5h1a.5.5 0 010 1h-1a.5.5 0 01-.5-.5zm3 .5a.5.5 0 000-1h-1a.5.5 0 000 1h1zM7 13a1 1 0 11-2 0 1 1 0 012 0zm3.5-1.5a.5.5 0 01.5.5v1a.5.5 0 01-1 0v-1a.5.5 0 01.5-.5zm2 0a.5.5 0 01.5.5v1a.5.5 0 01-1 0v-1a.5.5 0 01.5-.5z" clip-rule="evenodd" /></svg></h2><div class="grid md:grid-cols-2 gap-12 text-white items-center"><div><h3 class="text-2xl font-bold mb-4">Kleuren & Kernwaarden</h3><p class="text-white/80 text-lg">De huisstijl van De Kringwinkel is eenvoudig en krachtig.</p><div class="mt-6 space-y-4"><div class="flex items-center gap-4"><div class="w-10 h-10 rounded-full bg-orange-500 border-2 border-white/50"></div><div><strong class="block text-lg">Oranje:</strong> Energie en betrokkenheid.</div></div><div class="flex items-center gap-4"><div class="w-10 h-10 rounded-full bg-white"></div><div><strong class="block text-slate-800 text-lg">Wit:</strong> Duidelijkheid en eenvoud.</div></div></div></div><div><h3 class="text-2xl font-bold mb-4">Evolutie van het Logo</h3><div class="space-y-6"><div class="text-center"><p class="text-sm text-white/70 mb-1">OUD LOGO</p><div class="p-4 border border-dashed border-white/30 rounded-lg inline-block font-mono text-xl">de kringwinkel <span class="text-orange-400">&larr; wie kringt, die wint</span></div></div><div class="text-center"><p class="text-sm text-white/70 mb-1">NIEUW LOGO</p><div class="p-3 bg-white/10 rounded-lg inline-flex items-center gap-3"><img src="logo.png" alt="Nieuw Kringwinkel Logo" class="w-10 h-10"><span class="font-bold text-2xl">Kringwinkel</span><span class="text-orange-300 font-semibold">Opnieuw geluk</span></div></div></div></div></div></section>
+        <section id="page-process" class="page"><div class="content-wrapper w-full max-w-6xl"><h2 class="slide-title">Proces <svg xmlns="http://www.w3.org/2000/svg" class="h-8 w-8 inline-block" viewBox="0 0 20 20" fill="currentColor"><path fill-rule="evenodd" d="M10 2a8 8 0 100 16 8 8 0 000-16zM5.5 4.5a.5.5 0 01.5.5v2a.5.5 0 01-1 0v-2a.5.5 0 01.5-.5zM6 10a.5.5 0 01.5-.5h1a.5.5 0 010 1h-1a.5.5 0 01-.5-.5zm3 .5a.5.5 0 000-1h-1a.5.5 0 000 1h1zm2 0a.5.5 0 000-1h-1a.5.5 0 000 1h1zm-2-3a.5.5 0 01.5-.5h1a.5.5 0 010 1h-1a.5.5 0 01-.5-.5zm3 .5a.5.5 0 000-1h-1a.5.5 0 000 1h1zM7 13a1 1 0 11-2 0 1 1 0 012 0zm3.5-1.5a.5.5 0 01.5.5v1a.5.5 0 01-1 0v-1a.5.5 0 01.5-.5zm2 0a.5.5 0 01.5.5v1a.5.5 0 01-1 0v-1a.5.5 0 01.5-.5z" clip-rule="evenodd" /></svg></h2><div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6 text-center items-start"><div><div class="glass-card mb-4 inline-block p-5"><svg class="w-12 h-12 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-8l-4-4m0 0L8 8m4-4v12"></path></svg></div><h3 class="font-bold text-xl mb-2">Doneren</h3><p class="text-white/80 text-sm">Mensen doneren herbruikbare spullen.</p></div><div><div class="glass-card mb-4 inline-block p-5"><svg class="w-12 h-12 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-6 9l2 2 4-4"></path></svg></div><h3 class="font-bold text-xl mb-2">Sorteren</h3><p class="text-white/80 text-sm">Medewerkers controleren en herstellen.</p></div><div><div class="glass-card mb-4 inline-block p-5"><svg class="w-12 h-12 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z"></path><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 11a3 3 0 11-6 0 3 3 0 016 0z"></path></svg></div><h3 class="font-bold text-xl mb-2">Magazijn</h3><p class="text-white/80 text-sm">Goederen worden centraal opgeslagen.</p></div><div><div class="glass-card mb-4 inline-block p-5"><svg class="w-12 h-12 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6"></path></svg></div><h3 class="font-bold text-xl mb-2">Winkel</h3><p class="text-white/80 text-sm">Items krijgen een nieuwe thuis.</p></div></div></div></section>
+        <section id="page-poster-moodboard" class="page"><div class="content-wrapper w-full max-w-7xl"><h2 class="slide-title">Poster & Moodboard</h2><div class="grid md:grid-cols-2 gap-8 items-stretch"><div><h3 class="text-3xl font-bold text-center mb-4 text-white">Poster</h3><div class="w-full h-full min-h-[400px] glass-card flex items-center justify-center"><img src="kvdw poster.jpg" alt="Poster GIP" class="max-h-[500px] rounded-lg"></div></div><div><h3 class="text-3xl font-bold text-center mb-4 text-white">Moodboard</h3><div class="w-full h-full min-h-[400px] glass-card flex items-center justify-center"><img src="moodbord.png" alt="Moodboard GIP" class="max-h-[500px] rounded-lg"></div></div></div></div></section>
+        <section id="page-competition" class="page"><div class="content-wrapper w-full max-w-6xl glass-card"><h2 class="slide-title">Concurrentie (Sales)</h2><div class="grid md:grid-cols-2 gap-12 text-white items-center"><div><div class="text-center mb-4"><div class="p-3 bg-white/10 rounded-lg inline-flex items-center gap-3"><img src="logo.png" alt="Kringwinkel Logo" class="w-16 h-16"><span class="font-bold text-3xl">Kringwinkel</span></div></div><ul class="list-none space-y-3"><li><strong class="text-lg block text-white">Bereik:</strong> Groot, met ~125 winkels in heel Vlaanderen.</li><li><strong class="text-lg block text-white">Populariteit:</strong> Zeer bekend, landelijke herkenbaarheid.</li><li><strong class="text-lg block text-white">Focus:</strong> Moderniseert winkels en volgt duurzaamheidstrends.</li></ul></div><div><div class="text-center mb-4"><h3 class="text-4xl font-bold">Opnieuw&Co</h3></div><ul class="list-none space-y-3"><li><strong class="text-lg block text-white">Bereik:</strong> Klein, 5 winkels in de regio Antwerpen.</li><li><strong class="text-lg block text-white">Populariteit:</strong> Sterk in de eigen regio, loyale klanten.</li><li><strong class="text-lg block text-white">Focus:</strong> Sterke nadruk op service, zoals garantie en thuisbezorging.</li></ul></div></div></div></section>
+        <section id="page-planning" class="page"><div class="content-wrapper w-full max-w-4xl glass-card"><h2 class="slide-title">Presentatieplanning (Sales)</h2><div class="text-lg"><ul><li><strong>Thema:</strong> Geef spullen een tweede leven – duurzaam winkelen voor iedereen.</li><li><strong>Doel:</strong> Bezoekers kennis laten maken met de missie van de Kringwinkel.</li><li><strong>Materialen:</strong> Laptop, posters, flyers, logo, en Kringwinkel-vest.</li><li><strong>Stand opbouw:</strong> Logisch en overzichtelijk, interactieve materialen centraal.</li><li><strong>Doelgroep:</strong> Leerkrachten en jury met interesse in duurzaamheid.</li></ul></div></div></section>
+        <section id="page-german-intro" class="page"><div class="content-wrapper w-full max-w-3xl glass-card"><h2 class="slide-title md:text-left">Voorstellen (Duits)</h2><p class="text-lg leading-relaxed text-white/90">Mein Name ist Zakaria Akanni. Ich bin 18 Jahre alt und komme aus Marokko. Ich studiere Organisatie, Vertrieb und Verkauf. Ich mache ein Praktikum bei De Kringwinkel. Nach dem Abschluss möchte ich gerne IKT studieren.</p><p class="text-lg leading-relaxed text-white/70 mt-2">(Mijn naam is Zakaria Akanni. Ik ben 18 jaar oud en kom uit Marokko. Ik studeer Organisatie, Verkoop en Marketing. Ik loop stage bij De Kringwinkel. Na mijn afstuderen wil ik graag ICT studeren.)</p></div></section>
+        <section id="page-german-tour" class="page">
+            <div class="content-wrapper w-full max-w-7xl">
+                <h2 class="slide-title">Rondleiding</h2>
+                <div class="grid md:grid-cols-2 gap-8 items-center">
+                    <div>
+                         <img src="duits.png" alt="Plattegrond van de winkel" class="rounded-lg shadow-2xl w-full">
+                    </div>
+                    <div class="glass-card text-lg">
+                        <ul>
+                           <li>Gehen Sie geradeaus, vorbei an der <strong>Kasse</strong>.</li>
+                           <li>Nehmen Sie den ersten Gang rechts, das ist die <strong>Dekorationsabteilung</strong>.</li>
+                           <li>Gehen Sie weiter geradeaus, vorbei an den <strong>Büchern</strong> und <strong>Haushaltswaren</strong>.</li>
+                           <li>Am Ende, bei der <strong>Unterhaltungselektronik</strong>, biegen Sie links ab.</li>
+                           <li>Gehen Sie an den <strong>Fahrrädern</strong> vorbei und biegen Sie wieder links ab.</li>
+                           <li>Sie sind jetzt bei der <strong>Kleidung</strong>.</li>
+                        </ul>
+                    </div>
+                </div>
+            </div>
+        </section>
+        <section id="page-swot" class="page"><div class="content-wrapper w-full max-w-5xl glass-card"><h2 class="slide-title">SWOT Analysis (Engels)</h2><div class="grid md:grid-cols-2 gap-8 text-white"><div><h3 class="font-bold text-2xl mb-3 text-green-300">Strengths</h3><ul class="list-disc list-inside space-y-2"><li>Strong social mission</li><li>Affordable prices</li><li>Eco-friendly</li></ul></div><div><h3 class="font-bold text-2xl mb-3 text-red-300">Weaknesses</h3><ul class="list-disc list-inside space-y-2"><li>Unpredictable supply</li><li>Outdated systems</li><li>Image issues</li></ul></div><div><h3 class="font-bold text-2xl mb-3 text-blue-300">Opportunities</h3><ul class="list-disc list-inside space-y-2"><li>Sustainability trend</li><li>Online sales</li><li>Collaborations</li></ul></div><div><h3 class="font-bold text-2xl mb-3 text-yellow-300">Threats</h3><ul class="list-disc list-inside space-y-2"><li>Competition (Vinted)</li><li>Economic crisis</li><li>Old prejudices</li></ul></div></div></div></section>
+        <section id="page-pitch" class="page"><div class="content-wrapper w-full max-w-3xl glass-card"><h2 class="slide-title md:text-left">Pitch (Engels)</h2><p class="text-lg leading-relaxed text-white/90">Good morning. I'm Zakaria. De Kringwinkel is a second-hand chain that gives products and people a second chance. They take donations, fix items, and sell them cheaply. This keeps things out of landfills and creates jobs. At the warehouse, I sorted donations, checked quality, and prepared items for shipping. I learned about teamwork and responsibility. This experience showed me that businesses can succeed while helping society and the environment. Thank you.</p></div></section>
+    </main>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', () => {
+            const homeBtn = document.getElementById('homeBtn');
+            const slideNav = document.getElementById('slideNav');
+            const prevBtn = document.getElementById('prevBtn');
+            const nextBtn = document.getElementById('nextBtn');
+            const pages = document.querySelectorAll('.page');
+            const menuGrid = document.querySelector('.subject-grid');
+            const greetingPage = document.getElementById('page-greeting');
+            const greetingText = document.getElementById('greeting-text');
+            const startSubjectBtn = document.getElementById('start-subject-btn');
+            
+            // New Intro elements
+            const introPage = document.getElementById('page-intro');
+            const introName = document.getElementById('intro-name');
+            const introWelcome = document.getElementById('intro-welcome');
+            const mainMenuPage = document.getElementById('page-menu');
+
+
+            const icons = {
+                'Frontdesk & Administration': `<svg class="w-12 h-12 subject-icon mx-auto" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5.5V11a2.5 2.5 0 00-5 0v10H5m14 0V9h-2m-4 12V9H9v12m-4 0V9H5"></path></svg>`,
+                'Klaar Voor de Wereld': `<svg xmlns="http://www.w3.org/2000/svg" class="w-12 h-12 subject-icon mx-auto" viewBox="0 0 24 24" fill="currentColor"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-1 17.93c-3.95-.49-7-3.85-7-7.93 0-.62.08-1.21.21-1.79L9 15v1c0 1.1.9 2 2 2v1.93zm6.9-2.54c-.26-.81-1-1.39-1.9-1.39h-1v-3c0-.55-.45-1-1-1H8v-2h2c.55 0 1-.45 1-1V7h2c1.1 0 2-.9 2-2v-.41c2.93 1.19 5 4.06 5 7.41 0 2.08-.8 3.97-2.1 5.39z"/></svg>`,
+                'Sales': `<svg class="w-12 h-12 subject-icon mx-auto" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M13 7h8m0 0v8m0-8l-8 8-4-4-6 6"></path></svg>`,
+                'Duitse Communicatie': `<svg xmlns="http://www.w3.org/2000/svg" class="w-12 h-12 subject-icon mx-auto" viewBox="0 0 5 3"><rect width="5" height="3" fill="#FFCE00"/><rect width="5" height="2" fill="#DD0000"/><rect width="5" height="1" fill="#000"/></svg>`,
+                'Engelse Communicatie': `<svg class="w-12 h-12 subject-icon mx-auto" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z"></path></svg>`,
+            };
+
+            const subjects = [
+                { teacher: 'Mr. Heymans', subject: 'Frontdesk & Administration', tasks: ['page-org', 'page-style', 'page-process'] },
+                { teacher: 'Mevr. Van Den Broeck', subject: 'Klaar Voor de Wereld', tasks: ['page-history', 'page-poster-moodboard'] },
+                { teacher: 'Mevr. El Oiamari', subject: 'Sales', tasks: ['page-competition', 'page-planning'] },
+                { teacher: 'Mevr. Yachou', subject: 'Duitse Communicatie', tasks: ['page-german-intro', 'page-german-tour'] },
+                { teacher: 'Mevr. Bal', subject: 'Engelse Communicatie', tasks: ['page-swot', 'page-pitch'] },
+            ];
+
+            let currentTasks = [];
+            let currentTaskIndex = -1;
+
+            function showPage(pageToShow) {
+                pages.forEach(p => {
+                    if (p.id !== 'page-intro') {
+                       p.classList.remove('active');
+                    }
+                });
+                if (pageToShow && pageToShow.id !== 'page-intro') {
+                     pageToShow.classList.add('active');
+                }
+            }
+
+            function populateMenu() {
+                menuGrid.innerHTML = '';
+                subjects.forEach(sub => {
+                    const card = document.createElement('div');
+                    card.className = 'subject-card';
+                    card.innerHTML = `
+                        ${icons[sub.subject] || ''}
+                        <p class="font-bold text-xl mb-2 text-white">${sub.subject}</p>
+                        <p class="text-sm text-white/80">${sub.teacher}</p>
+                        <button class="start-button" data-teacher="${sub.teacher}">Start</button>
+                    `;
+                    menuGrid.appendChild(card);
+                });
+            }
+
+            function showGreeting(teacher) {
+                greetingText.textContent = `Hallo ${teacher}`;
+                showPage(greetingPage);
+                homeBtn.style.display = 'flex';
+                slideNav.style.display = 'none';
+            }
+            
+            function showTask(index) {
+                const pageId = currentTasks[index];
+                const page = document.getElementById(pageId);
+                showPage(page);
+
+                slideNav.style.display = 'flex';
+                
+                prevBtn.disabled = (index === 0);
+                nextBtn.textContent = (index === currentTasks.length - 1) ? 'Terug naar menu' : 'Volgende';
+            }
+
+            function resetToMenu() {
+                showPage(mainMenuPage);
+                homeBtn.style.display = 'none';
+                slideNav.style.display = 'none';
+                currentTasks = [];
+                currentTaskIndex = -1;
+            }
+            
+            function handleIntroSequence() {
+                // 1. Show name
+                introName.classList.add('animate-fade-in-up');
+
+                // 2. After a delay, hide name and show welcome
+                setTimeout(() => {
+                    introName.classList.remove('animate-fade-in-up');
+                    introName.classList.add('animate-fade-out-up');
+                    introWelcome.classList.add('animate-fade-in-up');
+                }, 2500); // 2.5s delay
+
+                // 3. After another delay, hide the intro page
+                 setTimeout(() => {
+                    introPage.style.opacity = '0';
+                    introPage.addEventListener('transitionend', () => {
+                         introPage.classList.remove('active');
+                         mainMenuPage.classList.add('active');
+                    }, { once: true });
+                }, 4500); // Total 4.5s for intro
+            }
+
+
+            // Event Listeners
+            menuGrid.addEventListener('click', (e) => {
+                const startButton = e.target.closest('.start-button');
+                if (startButton) {
+                    const teacher = startButton.dataset.teacher;
+                    const subject = subjects.find(s => s.teacher === teacher);
+                    currentTasks = subject.tasks;
+                    showGreeting(teacher);
+                }
+            });
+
+            startSubjectBtn.addEventListener('click', () => {
+                currentTaskIndex = 0;
+                showTask(currentTaskIndex);
+            });
+
+            nextBtn.addEventListener('click', () => {
+                if (currentTaskIndex < currentTasks.length - 1) {
+                    currentTaskIndex++;
+                    showTask(currentTaskIndex);
+                } else {
+                    resetToMenu();
+                }
+            });
+
+            prevBtn.addEventListener('click', () => {
+                if (currentTaskIndex > 0) {
+                    currentTaskIndex--;
+                    showTask(currentTaskIndex);
+                }
+            });
+
+            homeBtn.addEventListener('click', resetToMenu);
+
+            document.addEventListener('keydown', (e) => {
+                if (currentTasks.length === 0) return;
+
+                if (e.key === 'ArrowRight' && nextBtn.textContent !== 'Terug naar menu') {
+                    nextBtn.click();
+                } else if (e.key === 'ArrowLeft') {
+                    prevBtn.click();
+                } else if (e.key === 'Escape' || e.key === 'Home') {
+                    homeBtn.click();
+                }
+            });
+
+            // Initial setup
+            populateMenu();
+            handleIntroSequence();
+        });
+    </script>
+</body>
+</html>
